@@ -36,9 +36,7 @@ function AdminDashboard() {
       </main>
 
       
-      <footer className="bg-gray-200 text-gray-700 p-4 text-center">
-         {new Date().getFullYear()} Admin Dashboard. All CopyRights reserved.
-      </footer>
+     
     </div>
   );
 }

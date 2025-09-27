@@ -1,45 +1,73 @@
 import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
 import { getMarkers, setMarker, verifyMarker, deleteMarker } from '../API/api';
-import L from "leaflet";
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 
-
+// Marker icons
 const pendingIcon = L.icon({
-  iconUrl: "https://maps.google.com/mapfiles/ms/icons/red-dot.png",
+  iconUrl: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
   iconSize: [40, 41],
   iconAnchor: [12, 41],
   popupAnchor: [1, -34],
-  shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
-  shadowSize: [41, 41],
 });
 
 const verifiedIcon = L.icon({
-  iconUrl: "https://maps.google.com/mapfiles/ms/icons/green-dot.png",
+  iconUrl: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png',
   iconSize: [40, 41],
   iconAnchor: [12, 41],
   popupAnchor: [1, -34],
-  shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
-  shadowSize: [41, 41],
 });
 
-function MapComponent({ role, userId, username }) {
+const userIcon = L.icon({
+  iconUrl: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png',
+  iconSize: [40, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+});
+
+function MapComponent({ role, username }) {
   const [markers, setMarkers] = useState([]);
+  const [userLocation, setUserLocation] = useState(null); // session-only user location
 
   useEffect(() => {
     fetchMarkers();
+    getUserLocation();
   }, []);
 
   const fetchMarkers = async () => {
     try {
       const res = await getMarkers();
-      setMarkers(Array.isArray(res.data) ? res.data : []);
+      const data = Array.isArray(res.data)
+        ? res.data.map(m => ({
+            ...m,
+            latitude: Number(m.latitude),
+            longitude: Number(m.longitude),
+          }))
+        : [];
+      setMarkers(data);
     } catch (err) {
-      console.error("Error fetching markers", err);
-      setMarkers([]);
+      console.error('Error fetching markers', err);
     }
   };
 
-  
+  const getUserLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setUserLocation({
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+          });
+        },
+        (err) => {
+          console.error('Geolocation error:', err);
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    }
+  };
+
   function MapClickHandler() {
     useMapEvents({
       click: async (e) => {
@@ -48,13 +76,18 @@ function MapComponent({ role, userId, username }) {
             latitude: e.latlng.lat,
             longitude: e.latlng.lng,
             status: 'PENDING',
-        
           };
           try {
             const res = await setMarker(newMarker);
-            setMarkers((prev) => [...prev, res.data]);
+            const savedMarker = {
+              ...res.data,
+              latitude: Number(res.data.latitude),
+              longitude: Number(res.data.longitude),
+            };
+            setMarkers(prev => [...prev, savedMarker]);
           } catch (err) {
-            console.error("Error setting marker", err);
+            console.error('Error setting marker', err);
+            alert('Marker not saved. Check backend.');
           }
         }
       },
@@ -64,55 +97,67 @@ function MapComponent({ role, userId, username }) {
 
   const handleVerify = async (id) => {
     try {
-      await verifyMarker(id);
-      setMarkers((prev) =>
-        prev.map((m) => (m.id === id ? { ...m, status: 'VERIFIED' } : m))
+      const res = await verifyMarker(id);
+      setMarkers(prev =>
+        prev.map(m => (m.id === id ? { ...m, status: res.data.status } : m))
       );
     } catch (err) {
-      console.error("Error verifying marker", err);
+      console.error('Error verifying marker', err);
     }
   };
 
   const handleDelete = async (id) => {
     try {
       await deleteMarker(id);
-      setMarkers((prev) => prev.filter((m) => m.id !== id));
+      setMarkers(prev => prev.filter(m => m.id !== id));
     } catch (err) {
-      console.error("Error deleting marker", err);
+      console.error('Error deleting marker', err);
     }
   };
 
-  return (
-    <MapContainer center={[19.076, 72.8777]} zoom={8} style={{ height: '620px', width: '100%' }}>
-      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-      {role === 'ADMIN' && <MapClickHandler />}
+  // Center map on user if available, else default
+  const center = userLocation ? [userLocation.lat, userLocation.lng] : [19.076, 72.8777];
 
-      {Array.isArray(markers) && markers.map((m) => (
-        <Marker
-          key={m.id}
-          position={[m.latitude, m.longitude]}
-          icon={m.status === 'PENDING' ? pendingIcon : verifiedIcon}
-        >
-          <Popup>
-            <br />
-            Lat: {m.latitude.toFixed(4)}, Lng: {m.longitude.toFixed(4)} <br />
-            Status: {m.status === 'PENDING' ? '⏳ Pending' : '✅ Verified'}
-            {role === 'ADMIN' && (
-              <>
-                {m.status === 'PENDING' && (
-                  <>
-                    <br />
-                    <button className='border p-1' onClick={() => handleVerify(m.id)}>✔ Verify</button>
-                  </>
-                )}
-                <br />
-                <button className='border p-1' onClick={() => handleDelete(m.id)}>❌ Remove</button>
-              </>
-            )}
-          </Popup>
-        </Marker>
-      ))}
-    </MapContainer>
+  return (
+    <div style={{ height: '100vh', width: '100%' }}>
+      <MapContainer center={center} zoom={12} style={{ height: '100%', width: '100%' }}>
+        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+        {role === 'ADMIN' && <MapClickHandler />}
+
+        {/* User's session-only location */}
+        {userLocation && (
+          <Marker position={[userLocation.lat, userLocation.lng]} icon={userIcon}>
+            <Popup>{username} (You)</Popup>
+          </Marker>
+        )}
+
+        {/* Admin/other markers */}
+        {markers.map(m => (
+          <Marker
+            key={m.id}
+            position={[m.latitude, m.longitude]}
+            icon={m.status === 'PENDING' ? pendingIcon : verifiedIcon}
+          >
+            <Popup>
+              Lat: {m.latitude.toFixed(4)}, Lng: {m.longitude.toFixed(4)} <br />
+              Status: {m.status === 'PENDING' ? '⏳ Pending' : '✅ Verified'}
+              {role === 'ADMIN' && (
+                <>
+                  {m.status === 'PENDING' && (
+                    <>
+                      <br />
+                      <button className="border p-1" onClick={() => handleVerify(m.id)}>✔ Verify</button>
+                    </>
+                  )}
+                  <br />
+                  <button className="border p-1" onClick={() => handleDelete(m.id)}>❌ Remove</button>
+                </>
+              )}
+            </Popup>
+          </Marker>
+        ))}
+      </MapContainer>
+    </div>
   );
 }
 
