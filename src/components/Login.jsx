@@ -53,6 +53,7 @@ function Login() {
     <div className="flex justify-center items-center min-h-screen bg-gray-100 p-4">
       <div className="w-full max-w-md bg-white p-8 rounded-xl shadow-lg">
         {!showRegister ? (
+          // ----------------- LOGIN -----------------
           <form onSubmit={handleLoginSubmit(onLogin)} className="space-y-4">
             <h2 className="text-2xl font-semibold text-center text-gray-800">Login</h2>
             <div>
@@ -79,6 +80,7 @@ function Login() {
             >
               Login
             </button>
+            
             <p className="text-center text-gray-600 mt-2">
               Don't have an account?{" "}
               <span className="text-blue-500 cursor-pointer" onClick={() => setShowRegister(true)}>
@@ -87,17 +89,22 @@ function Login() {
             </p>
           </form>
         ) : (
+          // ----------------- REGISTRATION -----------------
           <form onSubmit={handleRegSubmit(onRegister)} className="space-y-4">
             <h2 className="text-2xl font-semibold text-center text-gray-800">Register</h2>
+
+            {/* Name */}
             <div>
-              <label className="block text-gray-700">Username</label>
+              <label className="block text-gray-700">Name</label>
               <input
                 type="text"
-                {...regRegister("username", { required: "Username is required" })}
+                {...regRegister("name", { required: "Name is required" })}
                 className="w-full mt-1 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
               />
-              {regErrors.username && <p className="text-red-500 text-sm mt-1">{regErrors.username.message}</p>}
+              {regErrors.name && <p className="text-red-500 text-sm mt-1">{regErrors.name.message}</p>}
             </div>
+
+            {/* Email */}
             <div>
               <label className="block text-gray-700">Email</label>
               <input
@@ -110,6 +117,19 @@ function Login() {
               />
               {regErrors.email && <p className="text-red-500 text-sm mt-1">{regErrors.email.message}</p>}
             </div>
+
+            {/* Username */}
+            <div>
+              <label className="block text-gray-700">Username</label>
+              <input
+                type="text"
+                {...regRegister("username", { required: "Username is required" })}
+                className="w-full mt-1 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+              />
+              {regErrors.username && <p className="text-red-500 text-sm mt-1">{regErrors.username.message}</p>}
+            </div>
+
+            {/* Password */}
             <div>
               <label className="block text-gray-700">Password</label>
               <input
@@ -119,6 +139,23 @@ function Login() {
               />
               {regErrors.password && <p className="text-red-500 text-sm mt-1">{regErrors.password.message}</p>}
             </div>
+
+            {/* Phone Number */}
+            <div>
+              <label className="block text-gray-700">Phone No</label>
+              <input
+
+            
+                type="tel"
+                {...regRegister("phoneNo", { 
+                  required: "Phone number is required",
+                  pattern: { value: /^[0-9]{10}$/, message: "Enter a valid 10-digit phone number" }
+                })}
+                className="w-full mt-1 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+              />
+              {regErrors.phoneNo && <p className="text-red-500 text-sm mt-1">{regErrors.phoneNo.message}</p>}
+            </div>
+
             <button
               type="submit"
               className="w-full bg-green-500 text-white py-2 rounded-md hover:bg-green-600 transition-colors"
