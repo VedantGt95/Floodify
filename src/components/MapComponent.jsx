@@ -48,7 +48,7 @@ function MapComponent({ role, userId, username }) {
             latitude: e.latlng.lat,
             longitude: e.latlng.lng,
             status: 'PENDING',
-            createdBy: { id: userId }
+        
           };
           try {
             const res = await setMarker(newMarker);
