@@ -7,8 +7,8 @@ import {
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
-// Icons for status
-const pendingIcon = L.icon({ iconUrl: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png', iconSize: [40,41], iconAnchor: [12,41], popupAnchor: [1,-34] });
+// Icons
+
 const verifiedIcon = L.icon({ iconUrl: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png', iconSize: [40,41], iconAnchor: [12,41], popupAnchor: [1,-34] });
 const userIcon = L.icon({ iconUrl: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', iconSize: [40,41], iconAnchor: [12,41], popupAnchor: [1,-34] });
 const floodIcon = L.icon({ iconUrl: 'https://maps.google.com/mapfiles/ms/icons/orange-dot.png', iconSize: [40,41], iconAnchor: [12,41], popupAnchor: [1,-34] });
@@ -24,28 +24,17 @@ function MapComponent({ role, username }) {
     getUserLocation();
   }, []);
 
-  // Fetch markers
   const fetchAllMarkers = async () => {
     try {
-      const shelterRes = await getMarkers();       // Admin shelters
-      const floodRes = await getFloodAreas();      // User flood areas
+      const shelterRes = await getMarkers();
+      const floodRes = await getFloodAreas();
 
       const shelters = Array.isArray(shelterRes.data)
-        ? shelterRes.data.map(m => ({ 
-            ...m, 
-            latitude: Number(m.latitude), 
-            longitude: Number(m.longitude), 
-            type: 'SHELTER' 
-          }))
+        ? shelterRes.data.map(m => ({ ...m, latitude: Number(m.latitude), longitude: Number(m.longitude), type: 'SHELTER' }))
         : [];
 
       const floods = Array.isArray(floodRes.data)
-        ? floodRes.data.map(m => ({ 
-            ...m, 
-            latitude: Number(m.latitude), 
-            longitude: Number(m.longitude), 
-            type: 'FLOOD' 
-          }))
+        ? floodRes.data.map(m => ({ ...m, latitude: Number(m.latitude), longitude: Number(m.longitude), type: 'FLOOD' }))
         : [];
 
       setShelterMarkers(shelters);
@@ -55,37 +44,29 @@ function MapComponent({ role, username }) {
     }
   };
 
-  // Get user's current location
   const getUserLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         pos => setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
         err => console.warn('Geolocation error:', err),
-        { enableHighAccuracy: true, timeout: 10000 } // Increased timeout
+        { enableHighAccuracy: true, timeout: 15000 }
       );
     }
   };
 
-  // Map click handler
   function MapClickHandler() {
     useMapEvents({
       click: async e => {
         try {
-          const newMarker = {
-            latitude: e.latlng.lat,
-            longitude: e.latlng.lng,
-            status: 'PENDING'
-          };
+          const newMarker = { latitude: e.latlng.lat, longitude: e.latlng.lng, status: 'PENDING' };
 
           if (role === 'ADMIN') {
-            // Admin adds shelter
             const res = await setMarker(newMarker);
             setShelterMarkers(prev => [
               ...prev,
               { ...res.data, latitude: Number(res.data.latitude), longitude: Number(res.data.longitude), type: 'SHELTER' }
             ]);
           } else {
-            // User adds flood marker
             const res = await addFloodArea(newMarker);
             setFloodMarkers(prev => [
               ...prev,
@@ -101,7 +82,6 @@ function MapComponent({ role, username }) {
     return null;
   }
 
-  // Verify marker
   const handleVerify = async (m) => {
     try {
       if (m.type === 'SHELTER') {
@@ -111,12 +91,9 @@ function MapComponent({ role, username }) {
         const res = await verifyFloodArea(m.id);
         setFloodMarkers(prev => prev.map(x => x.id === m.id ? { ...x, status: res.data.status } : x));
       }
-    } catch (err) {
-      console.error('Error verifying marker', err);
-    }
+    } catch (err) { console.error('Error verifying marker', err); }
   };
 
-  // Delete marker
   const handleDelete = async (m) => {
     try {
       if (m.type === 'SHELTER') await deleteMarker(m.id);
@@ -124,9 +101,7 @@ function MapComponent({ role, username }) {
 
       if (m.type === 'SHELTER') setShelterMarkers(prev => prev.filter(x => x.id !== m.id));
       else setFloodMarkers(prev => prev.filter(x => x.id !== m.id));
-    } catch (err) {
-      console.error('Error deleting marker', err);
-    }
+    } catch (err) { console.error('Error deleting marker', err); }
   };
 
   const center = userLocation ? [userLocation.lat, userLocation.lng] : [19.076, 72.8777];
@@ -145,9 +120,9 @@ function MapComponent({ role, username }) {
 
         {floodMarkers.map(m => (
           <Marker
-            key={flood-${m.id}}
+            key={`flood-${m.id}`}
             position={[m.latitude, m.longitude]}
-            icon={m.status === 'PENDING' ? floodIcon : floodIcon}
+            icon={m.status === 'PENDING' ? floodIcon : verifiedIcon}
           >
             <Popup>
               FLOOD Marker <br />
@@ -166,9 +141,9 @@ function MapComponent({ role, username }) {
 
         {shelterMarkers.map(m => (
           <Marker
-            key={shelter-${m.id}}
+            key={`shelter-${m.id}`}
             position={[m.latitude, m.longitude]}
-            icon={m.status === 'PENDING' ? pendingIcon : verifiedIcon}
+            icon={m.status === 'PENDING' ? shelterIcon : verifiedIcon}
           >
             <Popup>
               SHELTER Marker <br />
