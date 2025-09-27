@@ -14,9 +14,9 @@ const userIcon = L.icon({ iconUrl: 'https://maps.google.com/mapfiles/ms/icons/bl
 const floodIcon = L.icon({ iconUrl: 'https://maps.google.com/mapfiles/ms/icons/orange-dot.png', iconSize: [40,41], iconAnchor: [12,41], popupAnchor: [1,-34] });
 
 function MapComponent({ role, username }) {
-  const [generalMarkers, setGeneralMarkers] = useState([]);
-  const [floodMarkers, setFloodMarkers] = useState([]);
-  const [userLocation, setUserLocation] = useState(null);
+    const [floodMarkers, setFloodMarkers] = useState([]);
+const [shelterMarkers, setShelterMarkers] = useState([]);
+
 
   useEffect(() => {
     fetchAllMarkers();
@@ -55,29 +55,39 @@ function MapComponent({ role, username }) {
 
   // Map click handler
   function MapClickHandler() {
-    useMapEvents({
-      click: async e => {
-        try {
-          // Users add both general marker and flood marker
-          if (role !== 'ADMIN') {
-            const newGen = { latitude: e.latlng.lat, longitude: e.latlng.lng, status: 'PENDING' };
-            const genRes = await setMarker(newGen);
-            setGeneralMarkers(prev => [...prev, { ...genRes.data, latitude: Number(genRes.data.latitude), longitude: Number(genRes.data.longitude), type: 'GENERAL' }]);
+  useMapEvents({
+    click: async e => {
+      try {
+        const newMarker = {
+          latitude: e.latlng.lat,
+          longitude: e.latlng.lng,
+          status: 'PENDING'
+        };
 
-            const newFlood = { latitude: e.latlng.lat, longitude: e.latlng.lng, status: 'PENDING' };
-            const floodRes = await addFloodArea(newFlood);
-            setFloodMarkers(prev => [...prev, { ...floodRes.data, latitude: Number(floodRes.data.latitude), longitude: Number(floodRes.data.longitude), type: 'FLOOD' }]);
-          } else {
-            // Admin could add logic if needed
-          }
-        } catch (err) {
-          console.error('Error adding marker', err);
-          alert('Marker not saved. Check backend.');
+        if (role === 'ADMIN') {
+          // Admin adds shelters
+          const res = await setMarker(newMarker);
+          setShelterMarkers(prev => [
+            ...prev,
+            { ...res.data, latitude: Number(res.data.latitude), longitude: Number(res.data.longitude) }
+          ]);
+        } else {
+          // Users add flood markers
+          const res = await addFloodArea(newMarker);
+          setFloodMarkers(prev => [
+            ...prev,
+            { ...res.data, latitude: Number(res.data.latitude), longitude: Number(res.data.longitude) }
+          ]);
         }
+      } catch (err) {
+        console.error('Error adding marker', err);
+        alert('Marker not saved. Check backend.');
       }
-    });
-    return null;
-  }
+    }
+  });
+  return null;
+}
+
 
   const handleVerify = async (m) => {
     try {
