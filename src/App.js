@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
+import Home from "./components/Home";
 import Login from "./components/Login";
 import AdminDashboard from "./components/AdminDashboard";
 import AdminLogin from "./components/AdminLogin";
@@ -20,8 +21,14 @@ const AdminRoute = ({ children }) => {
 function App() {
   return (
     <Routes>
-      <Route path="/login" element={<Login />} />
+      {/* Home Page */}
+      <Route path="/" element={<Home />} />
 
+      {/* Login Pages */}
+      <Route path="/login" element={<Login />} />
+      <Route path="/admin" element={<AdminLogin />} />
+
+      {/* Protected Routes */}
       <Route 
         path="/map" 
         element={
@@ -30,9 +37,6 @@ function App() {
           </PrivateRoute>
         } 
       />
-
-      <Route path="/admin" element={<AdminLogin />} />
-
       <Route 
         path="/admin/dashboard" 
         element={
@@ -42,7 +46,8 @@ function App() {
         } 
       />
 
-      <Route path="*" element={<Navigate to="/login" />} />
+      {/* Catch-all */}
+      <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );
 }

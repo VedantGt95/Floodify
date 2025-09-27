@@ -4,7 +4,7 @@ import { getMarkers, setMarker, verifyMarker, deleteMarker } from '../API/api';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
-// Marker icons
+
 const pendingIcon = L.icon({
   iconUrl: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
   iconSize: [40, 41],
@@ -28,7 +28,7 @@ const userIcon = L.icon({
 
 function MapComponent({ role, username }) {
   const [markers, setMarkers] = useState([]);
-  const [userLocation, setUserLocation] = useState(null); // session-only user location
+  const [userLocation, setUserLocation] = useState(null); 
 
   useEffect(() => {
     fetchMarkers();
@@ -43,6 +43,7 @@ function MapComponent({ role, username }) {
             ...m,
             latitude: Number(m.latitude),
             longitude: Number(m.longitude),
+            
           }))
         : [];
       setMarkers(data);
@@ -63,7 +64,7 @@ function MapComponent({ role, username }) {
         (err) => {
           console.error('Geolocation error:', err);
         },
-        { enableHighAccuracy: true, timeout: 10000 }
+        { enableHighAccuracy: true, timeout: 1000 }
       );
     }
   };
@@ -88,6 +89,7 @@ function MapComponent({ role, username }) {
           } catch (err) {
             console.error('Error setting marker', err);
             alert('Marker not saved. Check backend.');
+           
           }
         }
       },
@@ -115,7 +117,6 @@ function MapComponent({ role, username }) {
     }
   };
 
-  // Center map on user if available, else default
   const center = userLocation ? [userLocation.lat, userLocation.lng] : [19.076, 72.8777];
 
   return (
@@ -124,14 +125,14 @@ function MapComponent({ role, username }) {
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
         {role === 'ADMIN' && <MapClickHandler />}
 
-        {/* User's session-only location */}
+      
         {userLocation && (
           <Marker position={[userLocation.lat, userLocation.lng]} icon={userIcon}>
             <Popup>{username} (You)</Popup>
           </Marker>
         )}
 
-        {/* Admin/other markers */}
+       
         {markers.map(m => (
           <Marker
             key={m.id}
