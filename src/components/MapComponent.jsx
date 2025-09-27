@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
-import { getMarkers, setMarker, verifyMarker, deleteMarker } from '../API/api';
+import { getFloodAreas, addFloodArea, verifyFloodArea, deleteFloodArea } from '../API/api';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-
 
 const pendingIcon = L.icon({
   iconUrl: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
@@ -28,7 +27,7 @@ const userIcon = L.icon({
 
 function MapComponent({ role, username }) {
   const [markers, setMarkers] = useState([]);
-  const [userLocation, setUserLocation] = useState(null); 
+  const [userLocation, setUserLocation] = useState(null);
 
   useEffect(() => {
     fetchMarkers();
@@ -37,13 +36,12 @@ function MapComponent({ role, username }) {
 
   const fetchMarkers = async () => {
     try {
-      const res = await getMarkers();
+      const res = await getFloodAreas();
       const data = Array.isArray(res.data)
         ? res.data.map(m => ({
             ...m,
             latitude: Number(m.latitude),
             longitude: Number(m.longitude),
-            
           }))
         : [];
       setMarkers(data);
@@ -72,25 +70,22 @@ function MapComponent({ role, username }) {
   function MapClickHandler() {
     useMapEvents({
       click: async (e) => {
-        if (role === 'ADMIN') {
-          const newMarker = {
-            latitude: e.latlng.lat,
-            longitude: e.latlng.lng,
-            status: 'PENDING',
+        const newMarker = {
+          latitude: e.latlng.lat,
+          longitude: e.latlng.lng,
+          status: 'PENDING',
+        };
+        try {
+          const res = await addFloodArea(newMarker);
+          const savedMarker = {
+            ...res.data,
+            latitude: Number(res.data.latitude),
+            longitude: Number(res.data.longitude),
           };
-          try {
-            const res = await setMarker(newMarker);
-            const savedMarker = {
-              ...res.data,
-              latitude: Number(res.data.latitude),
-              longitude: Number(res.data.longitude),
-            };
-            setMarkers(prev => [...prev, savedMarker]);
-          } catch (err) {
-            console.error('Error setting marker', err);
-            alert('Marker not saved. Check backend.');
-           
-          }
+          setMarkers(prev => [...prev, savedMarker]);
+        } catch (err) {
+          console.error('Error adding marker', err);
+          alert('Marker not saved. Check backend.');
         }
       },
     });
@@ -99,7 +94,7 @@ function MapComponent({ role, username }) {
 
   const handleVerify = async (id) => {
     try {
-      const res = await verifyMarker(id);
+      const res = await verifyFloodArea(id);
       setMarkers(prev =>
         prev.map(m => (m.id === id ? { ...m, status: res.data.status } : m))
       );
@@ -110,7 +105,7 @@ function MapComponent({ role, username }) {
 
   const handleDelete = async (id) => {
     try {
-      await deleteMarker(id);
+      await deleteFloodArea(id);
       setMarkers(prev => prev.filter(m => m.id !== id));
     } catch (err) {
       console.error('Error deleting marker', err);
@@ -123,16 +118,14 @@ function MapComponent({ role, username }) {
     <div style={{ height: '100vh', width: '100%' }}>
       <MapContainer center={center} zoom={12} style={{ height: '100%', width: '100%' }}>
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-        {role === 'ADMIN' && <MapClickHandler />}
+        <MapClickHandler />
 
-      
         {userLocation && (
           <Marker position={[userLocation.lat, userLocation.lng]} icon={userIcon}>
             <Popup>{username} (You)</Popup>
           </Marker>
         )}
 
-       
         {markers.map(m => (
           <Marker
             key={m.id}
