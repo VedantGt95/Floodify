@@ -22,7 +22,7 @@ const onLogin = async (data) => {
       sessionStorage.setItem("isAdmin", "true");
       sessionStorage.setItem("adminUser", JSON.stringify(response.data));
 
-      alert(`Welcome Admin ${data.username}!`);
+      alert(`Welcome Admin!`);
       reset();
       navigate("/admin/dashboard");
     } else {
