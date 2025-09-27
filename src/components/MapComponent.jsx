@@ -7,93 +7,106 @@ import {
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
-// Icons
+// Icons for status
 const pendingIcon = L.icon({ iconUrl: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png', iconSize: [40,41], iconAnchor: [12,41], popupAnchor: [1,-34] });
 const verifiedIcon = L.icon({ iconUrl: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png', iconSize: [40,41], iconAnchor: [12,41], popupAnchor: [1,-34] });
 const userIcon = L.icon({ iconUrl: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', iconSize: [40,41], iconAnchor: [12,41], popupAnchor: [1,-34] });
 const floodIcon = L.icon({ iconUrl: 'https://maps.google.com/mapfiles/ms/icons/orange-dot.png', iconSize: [40,41], iconAnchor: [12,41], popupAnchor: [1,-34] });
+const shelterIcon = L.icon({ iconUrl: 'https://maps.google.com/mapfiles/ms/icons/purple-dot.png', iconSize: [40,41], iconAnchor: [12,41], popupAnchor: [1,-34] });
 
 function MapComponent({ role, username }) {
-    const [floodMarkers, setFloodMarkers] = useState([]);
-const [shelterMarkers, setShelterMarkers] = useState([]);
-
+  const [floodMarkers, setFloodMarkers] = useState([]);
+  const [shelterMarkers, setShelterMarkers] = useState([]);
+  const [userLocation, setUserLocation] = useState(null);
 
   useEffect(() => {
     fetchAllMarkers();
     getUserLocation();
   }, []);
 
+  // Fetch markers
   const fetchAllMarkers = async () => {
     try {
-      const genRes = await getMarkers();
-      const floodRes = await getFloodAreas();
+      const shelterRes = await getMarkers();       // Admin shelters
+      const floodRes = await getFloodAreas();      // User flood areas
 
-      const generalData = Array.isArray(genRes.data)
-        ? genRes.data.map(m => ({ ...m, latitude: Number(m.latitude), longitude: Number(m.longitude), type: 'GENERAL' }))
+      const shelters = Array.isArray(shelterRes.data)
+        ? shelterRes.data.map(m => ({ 
+            ...m, 
+            latitude: Number(m.latitude), 
+            longitude: Number(m.longitude), 
+            type: 'SHELTER' 
+          }))
         : [];
 
-      const floodData = Array.isArray(floodRes.data)
-        ? floodRes.data.map(m => ({ ...m, latitude: Number(m.latitude), longitude: Number(m.longitude), type: 'FLOOD' }))
+      const floods = Array.isArray(floodRes.data)
+        ? floodRes.data.map(m => ({ 
+            ...m, 
+            latitude: Number(m.latitude), 
+            longitude: Number(m.longitude), 
+            type: 'FLOOD' 
+          }))
         : [];
 
-      setGeneralMarkers(generalData);
-      setFloodMarkers(floodData);
+      setShelterMarkers(shelters);
+      setFloodMarkers(floods);
     } catch (err) {
       console.error('Error fetching markers', err);
     }
   };
 
+  // Get user's current location
   const getUserLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         pos => setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-        err => console.error('Geolocation error:', err),
-        { enableHighAccuracy: true, timeout: 1000 }
+        err => console.warn('Geolocation error:', err),
+        { enableHighAccuracy: true, timeout: 10000 } // Increased timeout
       );
     }
   };
 
   // Map click handler
   function MapClickHandler() {
-  useMapEvents({
-    click: async e => {
-      try {
-        const newMarker = {
-          latitude: e.latlng.lat,
-          longitude: e.latlng.lng,
-          status: 'PENDING'
-        };
+    useMapEvents({
+      click: async e => {
+        try {
+          const newMarker = {
+            latitude: e.latlng.lat,
+            longitude: e.latlng.lng,
+            status: 'PENDING'
+          };
 
-        if (role === 'ADMIN') {
-          // Admin adds shelters
-          const res = await setMarker(newMarker);
-          setShelterMarkers(prev => [
-            ...prev,
-            { ...res.data, latitude: Number(res.data.latitude), longitude: Number(res.data.longitude) }
-          ]);
-        } else {
-          // Users add flood markers
-          const res = await addFloodArea(newMarker);
-          setFloodMarkers(prev => [
-            ...prev,
-            { ...res.data, latitude: Number(res.data.latitude), longitude: Number(res.data.longitude) }
-          ]);
+          if (role === 'ADMIN') {
+            // Admin adds shelter
+            const res = await setMarker(newMarker);
+            setShelterMarkers(prev => [
+              ...prev,
+              { ...res.data, latitude: Number(res.data.latitude), longitude: Number(res.data.longitude), type: 'SHELTER' }
+            ]);
+          } else {
+            // User adds flood marker
+            const res = await addFloodArea(newMarker);
+            setFloodMarkers(prev => [
+              ...prev,
+              { ...res.data, latitude: Number(res.data.latitude), longitude: Number(res.data.longitude), type: 'FLOOD' }
+            ]);
+          }
+        } catch (err) {
+          console.error('Error adding marker', err);
+          alert('Marker not saved. Check backend.');
         }
-      } catch (err) {
-        console.error('Error adding marker', err);
-        alert('Marker not saved. Check backend.');
       }
-    }
-  });
-  return null;
-}
+    });
+    return null;
+  }
 
-
+  // Verify marker
   const handleVerify = async (m) => {
     try {
-      if (m.type === 'GENERAL') {
+      if (m.type === 'SHELTER') {
         const res = await verifyMarker(m.id);
-        setGeneralMarkers(prev => prev.map(x => x.id === m.id ? { ...x, status: res.data.status } : x));
+        setShelterMarkers(prev => prev.map(x => x.id === m.id ? { ...x, status: res.data.status } : x));
       } else if (m.type === 'FLOOD') {
         const res = await verifyFloodArea(m.id);
         setFloodMarkers(prev => prev.map(x => x.id === m.id ? { ...x, status: res.data.status } : x));
@@ -103,12 +116,13 @@ const [shelterMarkers, setShelterMarkers] = useState([]);
     }
   };
 
+  // Delete marker
   const handleDelete = async (m) => {
     try {
-      if (m.type === 'GENERAL') await deleteMarker(m.id);
+      if (m.type === 'SHELTER') await deleteMarker(m.id);
       else if (m.type === 'FLOOD') await deleteFloodArea(m.id);
 
-      if (m.type === 'GENERAL') setGeneralMarkers(prev => prev.filter(x => x.id !== m.id));
+      if (m.type === 'SHELTER') setShelterMarkers(prev => prev.filter(x => x.id !== m.id));
       else setFloodMarkers(prev => prev.filter(x => x.id !== m.id));
     } catch (err) {
       console.error('Error deleting marker', err);
@@ -123,27 +137,18 @@ const [shelterMarkers, setShelterMarkers] = useState([]);
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
         <MapClickHandler />
 
-        {userLocation && <Marker position={[userLocation.lat, userLocation.lng]} icon={userIcon}><Popup>{username} (You)</Popup></Marker>}
-
-        {generalMarkers.map(m => (
-          <Marker key={`gen-${m.id}`} position={[m.latitude, m.longitude]} icon={m.status === 'PENDING' ? pendingIcon : verifiedIcon}>
-            <Popup>
-              GENERAL Marker <br />
-              Lat: {m.latitude.toFixed(4)}, Lng: {m.longitude.toFixed(4)} <br />
-              Status: {m.status === 'PENDING' ? '⏳ Pending' : '✅ Verified'}
-              {role === 'ADMIN' && (
-                <>
-                  {m.status === 'PENDING' && <><br /><button className="border p-1 mt-1" onClick={() => handleVerify(m)}>✔ Verify</button></>}
-                  <br />
-                  <button className="border p-1 mt-1" onClick={() => handleDelete(m)}>❌ Remove</button>
-                </>
-              )}
-            </Popup>
+        {userLocation && (
+          <Marker position={[userLocation.lat, userLocation.lng]} icon={userIcon}>
+            <Popup>{username} (You)</Popup>
           </Marker>
-        ))}
+        )}
 
         {floodMarkers.map(m => (
-          <Marker key={`flood-${m.id}`} position={[m.latitude, m.longitude]} icon={floodIcon}>
+          <Marker
+            key={flood-${m.id}}
+            position={[m.latitude, m.longitude]}
+            icon={m.status === 'PENDING' ? floodIcon : floodIcon}
+          >
             <Popup>
               FLOOD Marker <br />
               Lat: {m.latitude.toFixed(4)}, Lng: {m.longitude.toFixed(4)} <br />
@@ -159,6 +164,26 @@ const [shelterMarkers, setShelterMarkers] = useState([]);
           </Marker>
         ))}
 
+        {shelterMarkers.map(m => (
+          <Marker
+            key={shelter-${m.id}}
+            position={[m.latitude, m.longitude]}
+            icon={m.status === 'PENDING' ? pendingIcon : verifiedIcon}
+          >
+            <Popup>
+              SHELTER Marker <br />
+              Lat: {m.latitude.toFixed(4)}, Lng: {m.longitude.toFixed(4)} <br />
+              Status: {m.status === 'PENDING' ? '⏳ Pending' : '✅ Verified'}
+              {role === 'ADMIN' && (
+                <>
+                  {m.status === 'PENDING' && <><br /><button className="border p-1 mt-1" onClick={() => handleVerify(m)}>✔ Verify</button></>}
+                  <br />
+                  <button className="border p-1 mt-1" onClick={() => handleDelete(m)}>❌ Remove</button>
+                </>
+              )}
+            </Popup>
+          </Marker>
+        ))}
       </MapContainer>
     </div>
   );
