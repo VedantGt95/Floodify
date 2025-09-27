@@ -122,7 +122,7 @@ function MapComponent({ role, username }) {
           <Marker
             key={`flood-${m.id}`}
             position={[m.latitude, m.longitude]}
-            icon={m.status === 'PENDING' ? floodIcon : verifiedIcon}
+            icon={m.status === 'PENDING' ? floodIcon : floodIcon}
           >
             <Popup>
               FLOOD Marker <br />

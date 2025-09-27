@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom"; 
 import { loginUser, registerUser } from "../API/api";
+import floodbg from "./floodbg.jpeg";
 
 function Login() {
   const [showRegister, setShowRegister] = useState(false);
@@ -50,128 +51,202 @@ function Login() {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-100 p-4">
-      <div className="w-full max-w-md bg-white p-8 rounded-xl shadow-lg">
-        {!showRegister ? (
-          // ----------------- LOGIN -----------------
-          <form onSubmit={handleLoginSubmit(onLogin)} className="space-y-4">
-            <h2 className="text-2xl font-semibold text-center text-gray-800">Login</h2>
-            <div>
-              <label className="block text-gray-700">Username</label>
-              <input
-                type="text"
-                {...loginRegister("username", { required: "Username is required" })}
-                className="w-full mt-1 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
-              />
-              {loginErrors.username && <p className="text-red-500 text-sm mt-1">{loginErrors.username.message}</p>}
-            </div>
-            <div>
-              <label className="block text-gray-700">Password</label>
-              <input
-                type="password"
-                {...loginRegister("password", { required: "Password is required" })}
-                className="w-full mt-1 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
-              />
-              {loginErrors.password && <p className="text-red-500 text-sm mt-1">{loginErrors.password.message}</p>}
-            </div>
-            <button
-              type="submit"
-              className="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 transition-colors"
-            >
-              Login
-            </button>
-            
-            <p className="text-center text-gray-600 mt-2">
-              Don't have an account?{" "}
-              <span className="text-blue-500 cursor-pointer" onClick={() => setShowRegister(true)}>
-                Register
-              </span>
-            </p>
-          </form>
-        ) : (
-          // ----------------- REGISTRATION -----------------
-          <form onSubmit={handleRegSubmit(onRegister)} className="space-y-4">
-            <h2 className="text-2xl font-semibold text-center text-gray-800">Register</h2>
+   <div
+  className="flex flex-col min-h-screen"
+  style={{
+     backgroundImage: `url(${floodbg})`,
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+    backgroundRepeat: "no-repeat",
+  }}
+>
+  {/* ------------------ NAVBAR ------------------ */}
+  <nav
+    className="flex justify-between items-center px-8 py-4 shadow-md"
+    style={{ background: "linear-gradient(135deg, #000080 0%, #00004d 100%)" }}
+  >
+    <h1
+      className="text-2xl font-bold text-white cursor-pointer tracking-wide"
+      onClick={() => navigate("/")}
+    >
+      Floodify
+    </h1>
+    
+  </nav>
 
-            {/* Name */}
-            <div>
-              <label className="block text-gray-700">Name</label>
-              <input
-                type="text"
-                {...regRegister("name", { required: "Name is required" })}
-                className="w-full mt-1 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
-              />
-              {regErrors.name && <p className="text-red-500 text-sm mt-1">{regErrors.name.message}</p>}
-            </div>
+  {/* ------------------ LOGIN / REGISTER CARD ------------------ */}
+  <div className="flex justify-center items-center flex-grow p-4">
+    <div className="w-full max-w-md bg-white/90 p-8 rounded-xl shadow-xl backdrop-blur-sm">
+      {!showRegister ? (
+        <form onSubmit={handleLoginSubmit(onLogin)} className="space-y-6">
+          <h2
+            className="text-2xl font-bold text-center text-white p-2 rounded-lg mb-4"
+            style={{ background: "linear-gradient(135deg, #000080 0%, #00004d 100%)" }}
+          >
+            Login Panel
+          </h2>
 
-            {/* Email */}
-            <div>
-              <label className="block text-gray-700">Email</label>
-              <input
-                type="email"
-                {...regRegister("email", {
-                  required: "Email is required",
-                  pattern: { value: /\S+@\S+\.\S+/, message: "Invalid email address" },
-                })}
-                className="w-full mt-1 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
-              />
-              {regErrors.email && <p className="text-red-500 text-sm mt-1">{regErrors.email.message}</p>}
-            </div>
+          {/* Username */}
+          <div>
+            <label className="block text-gray-700 font-medium">Username</label>
+            <input
+              type="text"
+              {...loginRegister("username", { required: "Username is required" })}
+              className="w-full mt-2 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
+            {loginErrors.username && (
+              <p className="text-red-500 text-sm mt-1">{loginErrors.username.message}</p>
+            )}
+          </div>
 
-            {/* Username */}
-            <div>
-              <label className="block text-gray-700">Username</label>
-              <input
-                type="text"
-                {...regRegister("username", { required: "Username is required" })}
-                className="w-full mt-1 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
-              />
-              {regErrors.username && <p className="text-red-500 text-sm mt-1">{regErrors.username.message}</p>}
-            </div>
+          {/* Password */}
+          <div>
+            <label className="block text-gray-700 font-medium">Password</label>
+            <input
+              type="password"
+              {...loginRegister("password", { required: "Password is required" })}
+              className="w-full mt-2 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
+            {loginErrors.password && (
+              <p className="text-red-500 text-sm mt-1">{loginErrors.password.message}</p>
+            )}
+          </div>
 
-            {/* Password */}
-            <div>
-              <label className="block text-gray-700">Password</label>
-              <input
-                type="password"
-                {...regRegister("password", { required: "Password is required" })}
-                className="w-full mt-1 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
-              />
-              {regErrors.password && <p className="text-red-500 text-sm mt-1">{regErrors.password.message}</p>}
-            </div>
+          <button
+            type="submit"
+            className="w-full py-2 rounded-lg text-white font-medium transition-colors"
+            style={{ background: "linear-gradient(135deg, #000080 0%, #00004d 100%)" }}
+          >
+            Login
+          </button>
 
-            {/* Phone Number */}
-            <div>
-              <label className="block text-gray-700">Phone No</label>
-              <input
-
-            
-                type="tel"
-                {...regRegister("phoneNo", { 
-                  required: "Phone number is required",
-                  pattern: { value: /^[0-9]{10}$/, message: "Enter a valid 10-digit phone number" }
-                })}
-                className="w-full mt-1 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
-              />
-              {regErrors.phoneNo && <p className="text-red-500 text-sm mt-1">{regErrors.phoneNo.message}</p>}
-            </div>
-
-            <button
-              type="submit"
-              className="w-full bg-green-500 text-white py-2 rounded-md hover:bg-green-600 transition-colors"
+          <p className="text-center text-gray-600 mt-2">
+            Don't have an account?{" "}
+            <span
+              className="text-blue-500 cursor-pointer"
+              onClick={() => setShowRegister(true)}
             >
               Register
-            </button>
-            <p className="text-center text-gray-600 mt-2">
-              Already have an account?{" "}
-              <span className="text-blue-500 cursor-pointer" onClick={() => setShowRegister(false)}>
-                Login
-              </span>
-            </p>
-          </form>
-        )}
-      </div>
+            </span>
+          </p>
+        </form>
+      ) : (
+        <form onSubmit={handleRegSubmit(onRegister)} className="space-y-6">
+          <h2
+            className="text-2xl font-bold text-center text-white p-2 rounded-lg mb-4"
+            style={{ background: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)" }}
+          >
+            Register
+          </h2>
+
+          {/* Name */}
+          <div>
+            <label className="block text-gray-700 font-medium">Name</label>
+            <input
+              type="text"
+              {...regRegister("name", { required: "Name is required" })}
+              className="w-full mt-2 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
+            {regErrors.name && (
+              <p className="text-red-500 text-sm mt-1">{regErrors.name.message}</p>
+            )}
+          </div>
+
+          {/* Email */}
+          <div>
+            <label className="block text-gray-700 font-medium">Email</label>
+            <input
+              type="email"
+              {...regRegister("email", {
+                required: "Email is required",
+                pattern: {
+                  value: /\S+@\S+\.\S+/,
+                  message: "Invalid email address",
+                },
+              })}
+              className="w-full mt-2 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
+            {regErrors.email && (
+              <p className="text-red-500 text-sm mt-1">{regErrors.email.message}</p>
+            )}
+          </div>
+
+          {/* Username */}
+          <div>
+            <label className="block text-gray-700 font-medium">Username</label>
+            <input
+              type="text"
+              {...regRegister("username", { required: "Username is required" })}
+              className="w-full mt-2 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
+            {regErrors.username && (
+              <p className="text-red-500 text-sm mt-1">{regErrors.username.message}</p>
+            )}
+          </div>
+
+          {/* Password */}
+          <div>
+            <label className="block text-gray-700 font-medium">Password</label>
+            <input
+              type="password"
+              {...regRegister("password", { required: "Password is required" })}
+              className="w-full mt-2 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
+            {regErrors.password && (
+              <p className="text-red-500 text-sm mt-1">{regErrors.password.message}</p>
+            )}
+          </div>
+
+          {/* Phone Number */}
+          <div>
+            <label className="block text-gray-700 font-medium">Phone No</label>
+            <input
+              type="tel"
+              {...regRegister("phoneNo", {
+                required: "Phone number is required",
+                pattern: {
+                  value: /^[0-9]{10}$/,
+                  message: "Enter a valid 10-digit phone number",
+                },
+              })}
+              className="w-full mt-2 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
+            {regErrors.phoneNo && (
+              <p className="text-red-500 text-sm mt-1">{regErrors.phoneNo.message}</p>
+            )}
+          </div>
+
+          <button
+            type="submit"
+            className="w-full py-2 rounded-lg text-white font-medium transition-colors"
+            style={{ background: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)" }}
+          >
+            Register
+          </button>
+
+          <p className="text-center text-gray-600 mt-2">
+            Already have an account?{" "}
+            <span
+              className="text-blue-500 cursor-pointer"
+              onClick={() => setShowRegister(false)}
+            >
+              Login
+            </span>
+          </p>
+        </form>
+      )}
     </div>
+  </div>
+
+  {/* ------------------ FOOTER ------------------ */}
+  <footer
+    className="text-white text-center py-4"
+    style={{ background: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)" }}
+  >
+    &copy; {new Date().getFullYear()} Floodify. All rights reserved.
+  </footer>
+</div>
+
   );
 }
 
