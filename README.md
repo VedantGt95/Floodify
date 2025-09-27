@@ -1,70 +1,65 @@
-# Getting Started with Create React App
+Problem Statement Given:- Shelter Locator
+List/Map of nearby shelters or hospitals during heavy rain.
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Floodify
+Problem Statement
+Flooding is a major problem during the monsoon season in many regions. People often struggle to locate safe shelters, nearby hospitals, or identify flooded areas in real-time. Floodify is a web-based platform designed to enhance flood reporting, monitoring, and transparency. It allows users to report flooded areas and view live flood markers, while administrators can verify, manage, and remove reports and mark essential locations such as hospitals and shelters. Additionally, users can see current weather updates on the homepage using the Open-Meteo API, helping them make informed decisions during floods.
+________________________________________
+Tech Stack
+•	Frontend: React.js, Tailwind CSS, React Router DOM, React Hook Form, Axios, Leaflet.js
+•	Backend: Spring Boot, Spring Web, Spring Data JPA
+•	Database: MySQL (tables auto-generated via JPA)
+•	API: Open-Meteo API for weather data
+Frontend Dependencies (Exact Versions)
+npm install react@18.2.0 react-dom@18.2.0
+npm install react-leaflet@4.2.1 leaflet@1.9.4
+npm install react-router-dom@7.9.1
+________________________________________
+Team Members
+•	Arnav Jadhav
+•	Vedant Gharat
+________________________________________
+Setup Instructions
+Backend (Spring Boot)
+1.	Clone the repository:
+2.	git clone https://github.com/VedantGt95/Floodify.git
+3.	cd backend
+4.	Open the project in IntelliJ IDEA
+5.	Configure MySQL database in application.properties or application.yml
+6.	Run the application:
+7.	./mvnw spring-boot:run
+Tables are automatically created via Spring Data JPA
+Frontend (React) – made using CRA
+1.	Navigate to the frontend folder:
+2.	cd frontend
+3.	Install dependencies:
+4.	npm install
+5.	Run the development server:
+6.	npm start
+7.	Access the app at http://localhost:3000
+________________________________________
+Features
+User Features
+•	Register and log in
+•	Location prompt after login
+•	Homepage with current weather information using Open-Meteo API
+•	View nearby hospitals and shelters on a map (read-only)
+•	Mark flooded regions on the map
+•	Fetch and view all flooded regions submitted by users
+Admin Features
+•	Mark hospitals and shelters on the map
+•	Verify, manage, or delete user-submitted flood reports
+________________________________________
+Screenshots / Pictures / Videos
+(Replace these placeholders with your actual images or video links)
+Homepage
+Map View
+Video Demo
+Watch Demo Video
+________________________________________
+Future Enhancements
+•	Real-time notifications for newly reported floods
+•	Mobile-friendly UI
+•	Advanced flood prediction using historical data
+•	Integration with more weather APIs for enhanced forecasting
 
-## Available Scripts
-
-In the project directory, you can run:
-
-### `npm start`
-
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
-
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
-
-### `npm test`
-
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
