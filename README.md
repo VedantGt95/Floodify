@@ -23,7 +23,7 @@ Setup Instructions
 Backend (Spring Boot)
 1.	Clone the repository:
 2.	git clone https://github.com/VedantGt95/Floodify.git
-3.	cd backend
+3.	cd floodify_backend
 4.	Open the project in IntelliJ IDEA
 5.	Configure MySQL database in application.properties or application.yml
 6.	Run the application:
