@@ -15,3 +15,11 @@ export const setMarker = (marker) => axios.post(`${BASE_URL}/markers/setmarker`,
 export const verifyMarker = (id) => axios.put(`${BASE_URL}/markers/${id}/verify`);
 
 export const deleteMarker = (id) => axios.delete(`${BASE_URL}/markers/${id}`);
+
+export const getFloodAreas = () => axios.get(`${BASE_URL}/flood/areas`);
+
+export const addFloodArea = (marker) => axios.post(`${BASE_URL}/flood/add`, marker);
+
+export const verifyFloodArea = (id) => axios.put(`${BASE_URL}/flood/${id}/verify`);
+
+export const deleteFloodArea = (id) => axios.delete(`${BASE_URL}/flood/${id}`);
