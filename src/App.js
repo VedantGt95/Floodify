@@ -1,8 +1,10 @@
-
+import Login from "./components/Login";
 
 function App() {
   return (
-    <><h1>Hospitals and shelter done</h1></>
+   <>
+   <Login></Login>
+   </>
   );
 }
 
