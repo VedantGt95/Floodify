@@ -48,12 +48,7 @@ Admin Features
 •	Mark hospitals and shelters on the map
 •	Verify, manage, or delete user-submitted flood reports
 ________________________________________
-Screenshots / Pictures / Videos
-(Replace these placeholders with your actual images or video links)
-Homepage
-Map View
-Video Demo
-Watch Demo Video
+Screenshots of the projects were told to place it in PPT
 ________________________________________
 Future Enhancements
 •	Real-time notifications for newly reported floods
