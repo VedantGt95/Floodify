@@ -1,50 +1,43 @@
 import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
-import { getFloodAreas, addFloodArea, verifyFloodArea, deleteFloodArea } from '../API/api';
+import { 
+  getMarkers, setMarker, verifyMarker, deleteMarker,
+  getFloodAreas, addFloodArea, verifyFloodArea, deleteFloodArea
+} from '../API/api';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
-const pendingIcon = L.icon({
-  iconUrl: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
-  iconSize: [40, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-});
-
-const verifiedIcon = L.icon({
-  iconUrl: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png',
-  iconSize: [40, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-});
-
-const userIcon = L.icon({
-  iconUrl: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png',
-  iconSize: [40, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-});
+// Icons
+const pendingIcon = L.icon({ iconUrl: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png', iconSize: [40,41], iconAnchor: [12,41], popupAnchor: [1,-34] });
+const verifiedIcon = L.icon({ iconUrl: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png', iconSize: [40,41], iconAnchor: [12,41], popupAnchor: [1,-34] });
+const userIcon = L.icon({ iconUrl: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', iconSize: [40,41], iconAnchor: [12,41], popupAnchor: [1,-34] });
+const floodIcon = L.icon({ iconUrl: 'https://maps.google.com/mapfiles/ms/icons/orange-dot.png', iconSize: [40,41], iconAnchor: [12,41], popupAnchor: [1,-34] });
 
 function MapComponent({ role, username }) {
-  const [markers, setMarkers] = useState([]);
+  const [generalMarkers, setGeneralMarkers] = useState([]);
+  const [floodMarkers, setFloodMarkers] = useState([]);
   const [userLocation, setUserLocation] = useState(null);
 
   useEffect(() => {
-    fetchMarkers();
+    fetchAllMarkers();
     getUserLocation();
   }, []);
 
-  const fetchMarkers = async () => {
+  const fetchAllMarkers = async () => {
     try {
-      const res = await getFloodAreas();
-      const data = Array.isArray(res.data)
-        ? res.data.map(m => ({
-            ...m,
-            latitude: Number(m.latitude),
-            longitude: Number(m.longitude),
-          }))
+      const genRes = await getMarkers();
+      const floodRes = await getFloodAreas();
+
+      const generalData = Array.isArray(genRes.data)
+        ? genRes.data.map(m => ({ ...m, latitude: Number(m.latitude), longitude: Number(m.longitude), type: 'GENERAL' }))
         : [];
-      setMarkers(data);
+
+      const floodData = Array.isArray(floodRes.data)
+        ? floodRes.data.map(m => ({ ...m, latitude: Number(m.latitude), longitude: Number(m.longitude), type: 'FLOOD' }))
+        : [];
+
+      setGeneralMarkers(generalData);
+      setFloodMarkers(floodData);
     } catch (err) {
       console.error('Error fetching markers', err);
     }
@@ -53,60 +46,60 @@ function MapComponent({ role, username }) {
   const getUserLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          setUserLocation({
-            lat: pos.coords.latitude,
-            lng: pos.coords.longitude,
-          });
-        },
-        (err) => {
-          console.error('Geolocation error:', err);
-        },
+        pos => setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        err => console.error('Geolocation error:', err),
         { enableHighAccuracy: true, timeout: 1000 }
       );
     }
   };
 
+  // Map click handler
   function MapClickHandler() {
     useMapEvents({
-      click: async (e) => {
-        const newMarker = {
-          latitude: e.latlng.lat,
-          longitude: e.latlng.lng,
-          status: 'PENDING',
-        };
+      click: async e => {
         try {
-          const res = await addFloodArea(newMarker);
-          const savedMarker = {
-            ...res.data,
-            latitude: Number(res.data.latitude),
-            longitude: Number(res.data.longitude),
-          };
-          setMarkers(prev => [...prev, savedMarker]);
+          // Users add both general marker and flood marker
+          if (role !== 'ADMIN') {
+            const newGen = { latitude: e.latlng.lat, longitude: e.latlng.lng, status: 'PENDING' };
+            const genRes = await setMarker(newGen);
+            setGeneralMarkers(prev => [...prev, { ...genRes.data, latitude: Number(genRes.data.latitude), longitude: Number(genRes.data.longitude), type: 'GENERAL' }]);
+
+            const newFlood = { latitude: e.latlng.lat, longitude: e.latlng.lng, status: 'PENDING' };
+            const floodRes = await addFloodArea(newFlood);
+            setFloodMarkers(prev => [...prev, { ...floodRes.data, latitude: Number(floodRes.data.latitude), longitude: Number(floodRes.data.longitude), type: 'FLOOD' }]);
+          } else {
+            // Admin could add logic if needed
+          }
         } catch (err) {
           console.error('Error adding marker', err);
           alert('Marker not saved. Check backend.');
         }
-      },
+      }
     });
     return null;
   }
 
-  const handleVerify = async (id) => {
+  const handleVerify = async (m) => {
     try {
-      const res = await verifyFloodArea(id);
-      setMarkers(prev =>
-        prev.map(m => (m.id === id ? { ...m, status: res.data.status } : m))
-      );
+      if (m.type === 'GENERAL') {
+        const res = await verifyMarker(m.id);
+        setGeneralMarkers(prev => prev.map(x => x.id === m.id ? { ...x, status: res.data.status } : x));
+      } else if (m.type === 'FLOOD') {
+        const res = await verifyFloodArea(m.id);
+        setFloodMarkers(prev => prev.map(x => x.id === m.id ? { ...x, status: res.data.status } : x));
+      }
     } catch (err) {
       console.error('Error verifying marker', err);
     }
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (m) => {
     try {
-      await deleteFloodArea(id);
-      setMarkers(prev => prev.filter(m => m.id !== id));
+      if (m.type === 'GENERAL') await deleteMarker(m.id);
+      else if (m.type === 'FLOOD') await deleteFloodArea(m.id);
+
+      if (m.type === 'GENERAL') setGeneralMarkers(prev => prev.filter(x => x.id !== m.id));
+      else setFloodMarkers(prev => prev.filter(x => x.id !== m.id));
     } catch (err) {
       console.error('Error deleting marker', err);
     }
@@ -120,36 +113,42 @@ function MapComponent({ role, username }) {
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
         <MapClickHandler />
 
-        {userLocation && (
-          <Marker position={[userLocation.lat, userLocation.lng]} icon={userIcon}>
-            <Popup>{username} (You)</Popup>
-          </Marker>
-        )}
+        {userLocation && <Marker position={[userLocation.lat, userLocation.lng]} icon={userIcon}><Popup>{username} (You)</Popup></Marker>}
 
-        {markers.map(m => (
-          <Marker
-            key={m.id}
-            position={[m.latitude, m.longitude]}
-            icon={m.status === 'PENDING' ? pendingIcon : verifiedIcon}
-          >
+        {generalMarkers.map(m => (
+          <Marker key={`gen-${m.id}`} position={[m.latitude, m.longitude]} icon={m.status === 'PENDING' ? pendingIcon : verifiedIcon}>
             <Popup>
+              GENERAL Marker <br />
               Lat: {m.latitude.toFixed(4)}, Lng: {m.longitude.toFixed(4)} <br />
               Status: {m.status === 'PENDING' ? '⏳ Pending' : '✅ Verified'}
               {role === 'ADMIN' && (
                 <>
-                  {m.status === 'PENDING' && (
-                    <>
-                      <br />
-                      <button className="border p-1" onClick={() => handleVerify(m.id)}>✔ Verify</button>
-                    </>
-                  )}
+                  {m.status === 'PENDING' && <><br /><button className="border p-1 mt-1" onClick={() => handleVerify(m)}>✔ Verify</button></>}
                   <br />
-                  <button className="border p-1" onClick={() => handleDelete(m.id)}>❌ Remove</button>
+                  <button className="border p-1 mt-1" onClick={() => handleDelete(m)}>❌ Remove</button>
                 </>
               )}
             </Popup>
           </Marker>
         ))}
+
+        {floodMarkers.map(m => (
+          <Marker key={`flood-${m.id}`} position={[m.latitude, m.longitude]} icon={floodIcon}>
+            <Popup>
+              FLOOD Marker <br />
+              Lat: {m.latitude.toFixed(4)}, Lng: {m.longitude.toFixed(4)} <br />
+              Status: {m.status === 'PENDING' ? '⏳ Pending' : '✅ Verified'}
+              {role === 'ADMIN' && (
+                <>
+                  {m.status === 'PENDING' && <><br /><button className="border p-1 mt-1" onClick={() => handleVerify(m)}>✔ Verify</button></>}
+                  <br />
+                  <button className="border p-1 mt-1" onClick={() => handleDelete(m)}>❌ Remove</button>
+                </>
+              )}
+            </Popup>
+          </Marker>
+        ))}
+
       </MapContainer>
     </div>
   );
