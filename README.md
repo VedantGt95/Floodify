@@ -30,13 +30,11 @@ Backend (Spring Boot)
 7.	./mvnw spring-boot:run
 Tables are automatically created via Spring Data JPA
 Frontend (React) – made using CRA
-1.	Navigate to the frontend folder:
-2.	cd frontend
-3.	Install dependencies:
-4.	npm install
-5.	Run the development server:
-6.	npm start
-7.	Access the app at http://localhost:3000
+1.	Navigate to the frontend folder.	2. Install dependencies:
+3.	npm install
+4.	Run the development server:
+5.	npm start
+6.	Access the app at http://localhost:3000
 ________________________________________
 Features
 User Features
